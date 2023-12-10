@@ -69,10 +69,6 @@ class MyBambuClient(BambuClient):
             self._print_error = info.print_error
 
 
-async def listen():
-    await client.connect(callback=client.event_handler)
-
-
 for printer in cfg:
     client = MyBambuClient(
         device_type=printer['device_type'],
@@ -81,5 +77,10 @@ for printer in cfg:
         username="bblp",
         access_code=printer['access_code']
     )
+
+
+    async def listen():
+        await client.connect(callback=client.event_handler)
+
 
     asyncio.run(listen())
