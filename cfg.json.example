@@ -1,0 +1,16 @@
+[
+    {
+        'name': 'Printer 1',
+        'device_type': "P1P",
+        'serial': "01S00C000000000",
+        'host': "192.168.0.15",
+        'access_code': "12345678",
+    },
+    {
+        'name': 'Printer 2',
+        'device_type': "P1S",
+        'serial': "01P00A000000000",
+        'host': "192.168.0.17",
+        'access_code': "12345678",
+    },
+]
