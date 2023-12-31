@@ -55,12 +55,17 @@ cfg_load()
 class MyBambuClient(BambuClient):
     _gcode_state = "unknown"
     _print_error = 0
+    _name = None
+
+    def __init__(self, device_type: str, serial: str, host: str, username: str, access_code: str, name: str):
+        self._name = name
+        super().__init__(device_type, serial, host, username, access_code)
 
     def event_handler(self, event):
         # print(event)
         info = self.get_device().info
         if self._gcode_state != info.gcode_state or self._print_error != info.print_error:
-            mes = f'{info.device_type}\n{info.gcode_state} {info.gcode_file} {info.print_percentage}%\n{info.print_error}'
+            mes = f'{self._name}\n{info.gcode_state} {info.gcode_file} {info.print_percentage}%\n{info.print_error}'
 
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "\n", mes)
             bot = telebot.TeleBot(tb_token)
@@ -75,6 +80,7 @@ for printer in cfg:
         serial=printer['serial'],
         host=printer['host'],
         username="bblp",
+        name=printer['name'],
         access_code=printer['access_code']
     )
 
