@@ -9,6 +9,33 @@ from datetime import datetime
 import telebot
 from decouple import config
 
+from flask import Flask, render_template
+from flask_socketio import SocketIO
+from engineio.async_drivers import gevent
+
+# Create a new Flask app instance
+app = Flask(__name__, template_folder='./templates')
+
+# Set up the SocketIO server
+socketio = SocketIO(app, async_mode='gevent')
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+# Handle new messages from SocketIO clients
+@socketio.on('connect')
+def on_connect():
+    print('Client connected')
+
+
+@socketio.on('disconnect')
+def on_disconnect():
+    print('Client disconnected')
+
+
 tb_token = config('TB_TOKEN')
 chat_id = config('CHAT_ID')
 
@@ -52,6 +79,20 @@ def cfg_load():
 cfg_load()
 
 
+def text_to_id(text):
+    # Replace spaces with underscores
+    text = text.replace(" ", "_")
+
+    # Remove any non-alphanumeric characters except for underscores
+    text = ''.join(e for e in text if e.isalnum() or e == '_')
+
+    # Ensure that the resulting ID starts with a letter
+    if not text[0].isalpha():
+        text = "x" + text
+
+    return text
+
+
 class MyBambuClient(BambuClient):
     _gcode_state = "unknown"
     _print_error = 0
@@ -64,6 +105,18 @@ class MyBambuClient(BambuClient):
     def event_handler(self, event):
         # print(event)
         info = self.get_device().info
+
+        socketio.emit('mqtt-update', {
+            'id': text_to_id(self._name),
+            'name': self._name,
+            'gcode_state': info.gcode_state,
+            'print_error': 'ERROR!' if info.print_error else '',
+            'gcode_file': info.gcode_file,
+            'print_percentage': info.print_percentage,
+            'remaining_time': info.remaining_time,
+            'end_time':  info.end_time
+        }, namespace='/')
+
         if self._gcode_state != info.gcode_state or self._print_error != info.print_error:
             mes = f'{self._name}\n{info.gcode_state} {info.gcode_file} {info.print_percentage}%\n{info.print_error}'
 
@@ -74,19 +127,23 @@ class MyBambuClient(BambuClient):
             self._print_error = info.print_error
 
 
-for printer in cfg:
-    client = MyBambuClient(
-        device_type=printer['device_type'],
-        serial=printer['serial'],
-        host=printer['host'],
-        username="bblp",
-        name=printer['name'],
-        access_code=printer['access_code']
-    )
+if __name__ == '__main__':
+    for printer in cfg:
+        client = MyBambuClient(
+            device_type=printer['device_type'],
+            serial=printer['serial'],
+            host=printer['host'],
+            username="bblp",
+            name=printer['name'],
+            access_code=printer['access_code']
+        )
 
 
-    async def listen():
-        await client.connect(callback=client.event_handler)
+        async def listen():
+            await client.connect(callback=client.event_handler)
 
 
-    asyncio.run(listen())
+        asyncio.run(listen())
+
+    # Start the Flask server and the MQTT client
+    socketio.run(app, debug=False, host='0.0.0.0')
