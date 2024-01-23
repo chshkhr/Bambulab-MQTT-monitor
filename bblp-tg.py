@@ -9,12 +9,16 @@ from datetime import datetime
 import telebot
 from decouple import config
 
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for, send_from_directory
 from flask_socketio import SocketIO
 from engineio.async_drivers import gevent
 
+tb_token = config('TB_TOKEN')
+chat_id = config('CHAT_ID')
+http_port = int(config('HTTP_PORT'))
+
 # Create a new Flask app instance
-app = Flask(__name__, template_folder='./templates')
+app = Flask(__name__, template_folder='./templates', static_folder='./static')
 
 # Set up the SocketIO server
 socketio = SocketIO(app, async_mode='gevent')
@@ -23,6 +27,12 @@ socketio = SocketIO(app, async_mode='gevent')
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 # Handle new messages from SocketIO clients
@@ -34,10 +44,6 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print('Client disconnected')
-
-
-tb_token = config('TB_TOKEN')
-chat_id = config('CHAT_ID')
 
 
 cfg = [
@@ -146,4 +152,4 @@ if __name__ == '__main__':
         asyncio.run(listen())
 
     # Start the Flask server and the MQTT client
-    socketio.run(app, debug=False, host='0.0.0.0')
+    socketio.run(app, debug=True, host='0.0.0.0', port=http_port)
