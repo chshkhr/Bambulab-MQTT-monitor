@@ -122,7 +122,7 @@ class MyBambuClient(BambuClient):
             'remaining_time': info.remaining_time,
             'end_time':  info.end_time
         }, namespace='/')
-
+        return;
         if self._gcode_state != info.gcode_state or self._print_error != info.print_error:
             mes = f'{self._name}\n{info.gcode_state} {info.gcode_file} {info.print_percentage}%\n{info.print_error}'
 

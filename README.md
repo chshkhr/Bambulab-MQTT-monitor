@@ -6,3 +6,5 @@ mqtt monitoring bambulab printers to send message via telegram bot and via a loc
 3) copy cfg.json.example to cfg.json
 4) modify cfg.json according to your Bambu Lab printers park
 5) run bblp-tg.exe
+
+![Alt text](screenshot.png ?raw=true "Screenshot")

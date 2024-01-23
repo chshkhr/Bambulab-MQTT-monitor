@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bambulab</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
+    <style>
+      p {
+        background-color: linen;
+        padding: 20px;
+        margin: 20px;
+        border-style: double;
+      }
+
+      h1 {
+        color: maroon;
+        margin-left: 40px;
+      }
+    </style>
+    <link rel="shortcut icon" href="/favicon.ico">
+  </head>
+  <body>
+    <h1>My Bambulab</h1>
+    <div id="mqtt-messages">
+      <!-- The incoming MQTT messages will be displayed here -->
+    </div>
+    <script type="text/javascript">
+      // Initialize the SocketIO client
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+      // Listen for 'mqtt-update' events and update the HTML content accordingly
+      socket.on('mqtt-update', function(msg) {
+        var elem = document.getElementById(msg.id);
+        if (elem === null) {
+          elem = document.createElement('p');
+          elem.id = msg.id;
+          document.getElementById('mqtt-messages').appendChild(elem);
+          p = document.createElement('div');
+          elem.appendChild(p);
+          div = document.createElement('div');
+          div.class = 'w3-container';
+          div.innerHTML = '<div class="w3-border"><div class="w3-brown w3-center" style="height:24px;width:0%"></div></div>';
+          elem.appendChild(div);
+        }
+        elem.children[0].textContent = msg.name + ': ' + msg.gcode_state  + ', ' +
+          msg.gcode_file  + ', ' + msg.print_percentage + '%, ' +
+          msg.end_time + ' (' + Math.trunc(msg.remaining_time / 60) + ':' + ("0" + (msg.remaining_time % 60)).slice(-2) + ') '
+          msg.print_error;
+        e = elem.children[1].children[0].children[0];
+        s = msg.print_percentage + '%';
+        e.style.width = s;
+        e.textContent = s;
+      });
+    </script>
+  </body>
+</html>
