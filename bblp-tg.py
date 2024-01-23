@@ -152,4 +152,4 @@ if __name__ == '__main__':
         asyncio.run(listen())
 
     # Start the Flask server and the MQTT client
-    socketio.run(app, debug=True, host='0.0.0.0', port=http_port)
+    socketio.run(app, debug=False, host='0.0.0.0', port=http_port)
