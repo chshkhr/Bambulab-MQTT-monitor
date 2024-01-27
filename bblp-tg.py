@@ -35,15 +35,21 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
+connected_count = 0
+
 # Handle new messages from SocketIO clients
 @socketio.on('connect')
 def on_connect():
-    print('Client connected')
+    global connected_count
+    connected_count += 1
+    print(f'Client connected: {connected_count}')
 
 
 @socketio.on('disconnect')
 def on_disconnect():
-    print('Client disconnected')
+    global connected_count
+    connected_count -= 1
+    print(f'Client disconnected: {connected_count}')
 
 
 cfg = [
@@ -109,19 +115,21 @@ class MyBambuClient(BambuClient):
         super().__init__(device_type, serial, host, username, access_code)
 
     def event_handler(self, event):
+        global connected_count
         # print(event)
         info = self.get_device().info
 
-        socketio.emit('mqtt-update', {
-            'id': text_to_id(self._name),
-            'name': self._name,
-            'gcode_state': info.gcode_state,
-            'print_error': 'ERROR!' if info.print_error else '',
-            'gcode_file': info.gcode_file,
-            'print_percentage': info.print_percentage,
-            'remaining_time': info.remaining_time,
-            'end_time':  info.end_time
-        }, namespace='/')
+        if connected_count > 0:
+            socketio.emit('mqtt-update', {
+                'id': text_to_id(self._name),
+                'name': self._name,
+                'gcode_state': info.gcode_state,
+                'print_error': 'ERROR!' if info.print_error else '',
+                'gcode_file': info.gcode_file,
+                'print_percentage': info.print_percentage,
+                'remaining_time': info.remaining_time,
+                'end_time':  info.end_time
+            }, namespace='/')
 
         if self._gcode_state != info.gcode_state or self._print_error != info.print_error:
             mes = f'{self._name}\n{info.gcode_state} {info.gcode_file} {info.print_percentage}%\n{info.print_error}'
