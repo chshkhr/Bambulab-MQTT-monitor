@@ -1,0 +1,7 @@
+pyTelegramBotAPI
+python-decouple
+Flask
+Flask-SocketIO
+python-engineio
+gevent
+paho-mqtt
